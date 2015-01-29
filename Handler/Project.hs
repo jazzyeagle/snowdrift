@@ -203,6 +203,8 @@ getProjectsR = do
             return (project, summary)
 
     -- let sharesCount = getCount . summaryShares
+    let discussionsCount = getCount . summaryDiscussionCount
+    let ticketsCount = getCount . summaryTicketCount
 
     defaultLayout $ do
         setTitle "Projects | Snowdrift.coop"
