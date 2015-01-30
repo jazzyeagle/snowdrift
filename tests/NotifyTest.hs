@@ -21,6 +21,7 @@ import           Data.Text                            (Text)
 import qualified Data.Text                            as T
 import qualified Data.Text.IO                         as T
 import           System.FilePath                      ((</>))
+import           System.Directory                     (getDirectoryContents)
 import           System.Process                       (spawnProcess, terminateProcess)
 import           Yesod.Default.Config                 (AppConfig (..), DefaultEnv (..))
 import           Yesod.Markdown                       (unMarkdown, Markdown)
@@ -44,7 +45,10 @@ addAndVerifyEmail user_id email =
 
 withEmailDaemon :: FilePath -> (FilePath -> IO a) -> IO ()
 withEmailDaemon file action = do
-    let prefix = "dist/build"
+    subdirs <- fmap (filter $ L.isPrefixOf "dist-sandbox-") $ getDirectoryContents "dist"
+    let subdir = case subdirs of [x] -> x; _ -> ""
+        prefix = "dist" </> subdir </> "build"
+
     withDelay $ bracket
         (spawnProcess
              (prefix </> "SnowdriftEmailDaemon/SnowdriftEmailDaemon")
@@ -64,7 +68,7 @@ countWebsiteNotif with_delay user_id notif_type text =
         return $ T.count text contents
 
 notificationContent :: From query expr backend (expr (Entity Notification))
-                    => KeyBackend SqlBackend User -> NotificationType
+                    => Key User -> NotificationType
                     -> query (expr (Value Markdown))
 notificationContent user_id notif_type =
     from $ \n -> do
